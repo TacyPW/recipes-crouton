@@ -33,48 +33,52 @@ class Crouton(Integration):
         # FIXME: add category and tags as keywords
         # if 'tags' in recipe_json:
         #     recipe.keywords.set(Keyword.objects.filter(name__in=recipe_json['tags']))
-        # FIXME: add ingredients 
-
-        # print(recipe_json.get('ingredients', None))
-        
+        # FIXME: add ingredients         
         if 'ingredients' in recipe_json:
-            # step = Step.objects.create(space=self.request.space)
+            step = Step.objects.create(
+                    instruction="s", space=self.request.space, show_ingredients_table=self.request.user.userpreference.show_step_ingredients,
+                )
             ingredient_parser = IngredientParser(self.request, True)
             for ingredient in recipe_json['ingredients']:
-                # print(ingredient.get('ingredient', dict).get('name', None))
-                
-                if 'ingredient' in ingredient:
-                    # amount = ingredient['quantity']['amount']
-                    # unit = ingredient['quantity']['quantityType']
-                    food = ingredient['ingredient']['name']
-                    is_header = False
+                try:                     
+                    if 'ingredient' in ingredient:
+                        if 'name' in ingredient['ingredient']:
+                            food = ingredient['ingredient']['name']
+                    if 'quantity' in ingredient:
+                        if 'amount' in ingredient['quantity']:
+                            amount = ingredient['quantity']['amount']
+                        if 'quantityType' in ingredient['quantity']:
+                            unit = ingredient['quantity']['quantityType']
+                            is_header = False
+                        if ingredient['quantity']['quantityType'] == 'SECTION':
+                            is_header = True
+                            amount = None
+                            unit = None
+                    #amount, unit, food, note = ingredient_parser.parse(ingredient)
+                    # amount = ingredient.get('quantity', dict).get('amount', None)
+                    # unit = ingredient.get('quantity', dict).get('quantityType', None)
+                    # is_header = False
+                    # print(f'Amount: {amount}, Unit: {unit}, Food: {food}, Header: {is_header}')
+                    # amount = ingredient_parser.parse_amount(ingredient.quantity.amount)
+                    # unit = ingredient_parser.parse_unit(ingredient.quantity.quantityType) 
+                    # # FIXME: add note from ingredient.ingredient.name: parse between parentheses
+                    # food = ingredient_parser.parse_food(ingredient.ingredient.name)
+                    f = ingredient_parser.get_food(food)
+                    u = ingredient_parser.get_unit(unit)
+                    print(f'Amount: {amount}, Unit: {u}, Food: {f}')
+                    step.ingredients.add(Ingredient.objects.create(
+                        food=f, unit=u, amount=amount, is_header=is_header, original_text=ingredient, space=self.request.space,
+                    ))
+                except Exception:
+                    pass
+                recipe.steps.add(step)
 
-                if 'quantity' in ingredient:
-                    if 'amount' in ingredient['quantity']:
-                        amount = ingredient['quantity']['amount']
-                    if 'quantityType' in ingredient['quantity']:
-                        unit = ingredient['quantity']['quantityType']
-                    if ingredient['quantity']['quantityType'] == 'SECTION':
-                        is_header = True
-                        amount = None
-                        unit = None
-                    # food = ingredient.get('ingredient', dict).get('name', None);
-                #amount, unit, food, note = ingredient_parser.parse(ingredient)
-                # amount = ingredient.get('quantity', dict).get('amount', None)
-                # unit = ingredient.get('quantity', dict).get('quantityType', None)
-                # is_header = False
-                # print(f'Amount: {amount}, Unit: {unit}, Food: {food}, Header: {is_header}')
-                # amount = ingredient_parser.parse_amount(ingredient.quantity.amount)
-                # unit = ingredient_parser.parse_unit(ingredient.quantity.quantityType) 
-                # # FIXME: add note from ingredient.ingredient.name: parse between parentheses
-                # food = ingredient_parser.parse_food(ingredient.ingredient.name)
-                # f = ingredient_parser.get_food(food)
-                # u = ingredient_parser.get_unit(unit)
-                # recipe.ingredients.add(Ingredient.objects.create(
-                #     food=f, unit=u, amount=amount, original_text=ingredient, space=self.request.space,
-                # ))
-            # recipe.steps.add(step)
         # FIXME: add "steps" as recipe directions
+        if 'steps' in recipe_json:
+            step = Step.objects.create(space=self.request.space)
+            for direction in recipe_json['steps']:
+                step.instruction = direction 
+            recipe.steps.add(step)
 
         # FIXME: add nutritional info - also accept the misspelling "neutritionalInfo"
         if 'nutritionalInfo' in recipe_json or 'neutritionalInfo' in recipe_json:
