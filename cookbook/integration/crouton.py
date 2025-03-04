@@ -54,44 +54,39 @@ class Crouton(Integration):
                             is_header = True
                             amount = 0
                             unit = None
-                    #amount, unit, food, note = ingredient_parser.parse(ingredient)
-                    # amount = ingredient.get('quantity', dict).get('amount', None)
-                    # unit = ingredient.get('quantity', dict).get('quantityType', None)
-                    # is_header = False
-                    # print(f'Amount: {amount}, Unit: {unit}, Food: {food}, Header: {is_header}')
-                    # amount = ingredient_parser.parse_amount(ingredient.quantity.amount)
-                    # unit = ingredient_parser.parse_unit(ingredient.quantity.quantityType) 
-                    # # FIXME: add note from ingredient.ingredient.name: parse between parentheses
-                    # food = ingredient_parser.parse_food(ingredient.ingredient.name)
                     f = ingredient_parser.get_food(food)
                     u = ingredient_parser.get_unit(unit)
-                    # print(f'Amount: {amount}, Unit: {u}, Food: {f}')
                     step.ingredients.add(Ingredient.objects.create(
                         food=f, unit=u, amount=amount, is_header=is_header, original_text=ingredient, space=self.request.space,
                     ))
                 except Exception:
                     pass
                 recipe.steps.add(step)
+                
+        ingredients_added = False
 
         # FIXME: add "steps" as recipe directions
         if 'steps' in recipe_json:
-            for direction in recipe_json['steps']:
+            for direction in recipe_json['steps']:               
                 try:
                     if 'step' in direction:
                         instruction = direction['step']
                         print(f'Step: {step.instruction}')
                     if 'order' in direction:
                         order = direction['order']
-                        recipe.steps.add(Step.objects.create(
+                        step = (Step.objects.create(
                             instruction=instruction,
                             order=order,
                             space=self.request.space
                         ))
                     else: 
-                        recipe.steps.add(Step.objects.create(
+                        step = (Step.objects.create(
                             instruction=instruction, 
                             space=self.request.space
                         ))
+
+                        
+                    recipe.steps.add(step)
                 except Exception:   
                     pass
         
