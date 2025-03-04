@@ -45,7 +45,7 @@ class Crouton(Integration):
                 try:
                     if 'step' in direction:
                         instruction = direction['step']
-                        print(f'Step: {step.instruction}')
+                        # print(f'Step: {step.instruction}')
                     if 'order' in direction:
                         order = direction['order']
                         step = (Step.objects.create(
@@ -70,13 +70,18 @@ class Crouton(Integration):
                                 if 'name' in ingredient['ingredient']:
                                     food = ingredient['ingredient']['name']
                                     original_text = ingredient['ingredient']['name']
+                                    # print("food:", re.search('\\(', food))
+                                    note = None
+                                    if re.search('\\(', food) != None:
+                                        note = re.search(r'\((.*?)\)',food).group(1)
+                                        food = re.sub(r'\(.*\)', '', food)
                             if 'quantity' in ingredient:
                                 if 'amount' in ingredient['quantity']:
                                     amount = ingredient['quantity']['amount']
                                 if 'quantityType' in ingredient['quantity']:
                                     unit = ingredient['quantity']['quantityType']
                                     is_header = False
-                                    note = None
+                                    
                                 if ingredient['quantity']['quantityType'] == 'SECTION':
                                     is_header = True
                                     amount = 0
@@ -85,7 +90,7 @@ class Crouton(Integration):
                             f = ingredient_parser.get_food(food)
                             u = ingredient_parser.get_unit(unit)
                             step.ingredients.add(Ingredient.objects.create(
-                                food=f, unit=u, amount=amount, is_header=is_header, no_amount=is_header, note=note, original_text=original_text, space=self.request.space,
+                                food=f, unit=u, amount=amount, is_header=is_header, note=note, original_text=original_text, space=self.request.space,
                             ))
                         except Exception:
                             pass
