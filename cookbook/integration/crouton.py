@@ -41,7 +41,47 @@ class Crouton(Integration):
         step = Step.objects.create(
             space=self.request.space,
         )        
-                
+        
+        replacements = [
+            ['tablespoon', 'tbsp'],
+            ['tablespoons', 'tbsp'],
+            ['teaspoon', 'tsp'],
+            ['teaspoons', 'tsp'],
+            ['fluid ounce', 'fl oz'],
+            ['fluid ounces', 'fl oz'],
+            ['pound', 'lb'],
+            ['pounds', 'lb'],
+            ['ounce', 'oz'],
+            ['ounces', 'oz'],
+            ['quart', 'qt'],
+            ['quarts', 'qt'],
+            ['gallon', 'gal'],
+            ['gallons', 'gal'],
+            ['pint', 'pt'],
+            ['pints', 'pt'],
+            ['liter', 'l'],
+            ['liters', 'l'],
+            ['milliliter', 'ml'],
+            ['milliliters', 'ml'],
+            ['centiliter', 'cl'],
+            ['centiliters', 'cl'],
+            ['deciliter', 'dl'],
+            ['deciliters', 'dl'],
+            ['gram', 'g'],
+            ['grams', 'g'],
+            ['kilogram', 'kg'],
+            ['kilograms', 'kg'],
+            ['milligram', 'mg'],
+            ['milligrams', 'mg'],
+            ['inch', 'in'],
+            ['inches', 'in'],
+            ['centimeter', 'cm'],
+            ['centimeters', 'cm'],
+            ['millimeter', 'mm'],
+            ['millimeters', 'mm'],
+        ]
+        pattern = re.compile(r'\b(' + '|'.join([re.escape(word) for word, _ in replacements]) + r')\b')
+        replacement_map = dict(replacements)
         ingredients_added = False
 
         if 'steps' in recipe_json:
@@ -83,7 +123,8 @@ class Crouton(Integration):
                                 if 'amount' in ingredient['quantity']:
                                     amount = ingredient['quantity']['amount']
                                 if 'quantityType' in ingredient['quantity']:
-                                    unit = ingredient['quantity']['quantityType']
+                                    unit = ingredient['quantity']['quantityType'].lower()
+                                    unit = pattern.sub(lambda x: replacement_map[x.group()], unit)
                                     is_header = False
                                 if ingredient['quantity']['quantityType'] == 'ITEM':
                                     unit = None
