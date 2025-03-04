@@ -31,9 +31,38 @@ class Crouton(Integration):
             recipe.source_url = recipe_json['webLink']
 
         # FIXME: add category and tags as keywords
-
+        # if 'tags' in recipe_json:
+        #     recipe.keywords.set(Keyword.objects.filter(name__in=recipe_json['tags']))
         # FIXME: add ingredients 
 
+        # print(recipe_json.get('ingredients', None))
+        
+        if 'ingredients' in recipe_json:
+            # step = Step.objects.create(space=self.request.space)
+            ingredient_parser = IngredientParser(self.request, True)
+            for ingredient in recipe_json['ingredients']:
+                # print(ingredient.get('ingredient', dict).get('name', None))
+                food = ingredient.get('ingredient', dict).get('name', None);
+                #amount, unit, food, note = ingredient_parser.parse(ingredient)
+                if ingredient.get('quantity', dict).get('quantityType', None) == 'SECTION':
+                    amount = None
+                    unit = None
+                    is_header = True
+                else:
+                    amount = ingredient.get('quantity', dict).get('amount', None)
+                    unit = ingredient.get('quantity', dict).get('quantityType', None)
+                    is_header = False
+                print(f'Amount: {amount}, Unit: {unit}, Food: {food}, Header: {is_header}')
+                # amount = ingredient_parser.parse_amount(ingredient.quantity.amount)
+                # unit = ingredient_parser.parse_unit(ingredient.quantity.quantityType) 
+                # # FIXME: add note from ingredient.ingredient.name: parse between parentheses
+                # food = ingredient_parser.parse_food(ingredient.ingredient.name)
+                # f = ingredient_parser.get_food(food)
+                # u = ingredient_parser.get_unit(unit)
+                # recipe.ingredients.add(Ingredient.objects.create(
+                #     food=f, unit=u, amount=amount, original_text=ingredient, space=self.request.space,
+                # ))
+            # recipe.steps.add(step)
         # FIXME: add "steps" as recipe directions
 
         # FIXME: add nutritional info - also accept the misspelling "neutritionalInfo"
