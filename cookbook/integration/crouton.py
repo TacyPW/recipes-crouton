@@ -1,5 +1,6 @@
 import json
 from io import BytesIO
+import re
 from zipfile import ZipFile
 import base64
 
@@ -33,14 +34,12 @@ class Crouton(Integration):
         # FIXME: add category and tags as keywords
         # if 'tags' in recipe_json:
         #     recipe.keywords.set(Keyword.objects.filter(name__in=recipe_json['tags']))
-        # FIXME: add ingredients         
         step = Step.objects.create(
                 instruction="s", space=self.request.space,
             )        
                 
         ingredients_added = False
 
-        # FIXME: add "steps" as recipe directions
         if 'steps' in recipe_json:
             for direction in recipe_json['steps']:               
                 try:
