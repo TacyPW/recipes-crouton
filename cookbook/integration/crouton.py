@@ -1,5 +1,6 @@
 import json
 from io import BytesIO
+import re
 from zipfile import ZipFile
 import base64
 
@@ -30,13 +31,133 @@ class Crouton(Integration):
         if 'webLink' in recipe_json:
             recipe.source_url = recipe_json['webLink']
 
-        # FIXME: add category and tags as keywords
+        if 'tags' in recipe_json:
+            try:
+                for tag in recipe_json['tags']:
+                    recipe.keywords.add(Keyword.objects.get_or_create(space=self.request.space, name=tag)[0])
+            except Exception:
+                pass
 
-        # FIXME: add ingredients 
+        step = Step.objects.create(
+            space=self.request.space,
+        )        
+        
+        replacements = [
+            ['tablespoon', 'tbsp'],
+            ['tablespoons', 'tbsp'],
+            ['teaspoon', 'tsp'],
+            ['teaspoons', 'tsp'],
+            ['fluid ounce', 'fl oz'],
+            ['fluid ounces', 'fl oz'],
+            ['pound', 'lb'],
+            ['pounds', 'lb'],
+            ['ounce', 'oz'],
+            ['ounces', 'oz'],
+            ['quart', 'qt'],
+            ['quarts', 'qt'],
+            ['gallon', 'gal'],
+            ['gallons', 'gal'],
+            ['pint', 'pt'],
+            ['pints', 'pt'],
+            ['liter', 'l'],
+            ['liters', 'l'],
+            ['milliliter', 'ml'],
+            ['milliliters', 'ml'],
+            ['centiliter', 'cl'],
+            ['centiliters', 'cl'],
+            ['deciliter', 'dl'],
+            ['deciliters', 'dl'],
+            ['gram', 'g'],
+            ['grams', 'g'],
+            ['kilogram', 'kg'],
+            ['kilograms', 'kg'],
+            ['milligram', 'mg'],
+            ['milligrams', 'mg'],
+            ['inch', 'in'],
+            ['inches', 'in'],
+            ['centimeter', 'cm'],
+            ['centimeters', 'cm'],
+            ['millimeter', 'mm'],
+            ['millimeters', 'mm'],
+        ]
+        pattern = re.compile(r'\b(' + '|'.join([re.escape(word) for word, _ in replacements]) + r')\b')
+        replacement_map = dict(replacements)
 
-        # FIXME: add "steps" as recipe directions
+        ingredients_added = False
 
-        # FIXME: add nutritional info - also accept the misspelling "neutritionalInfo"
+        if 'steps' in recipe_json:
+            for direction in recipe_json['steps']:               
+                try:
+                    if 'step' in direction:
+                        instruction = direction['step']
+                        # print(f'Step: {step.instruction}')
+                    if 'order' in direction:
+                        order = direction['order']
+                        step = (Step.objects.create(
+                            instruction=instruction,
+                            order=order,
+                            space=self.request.space,
+                            show_ingredients_table=False
+                        ))
+                    else: 
+                        step = (Step.objects.create(
+                            instruction=instruction, 
+                            space=self.request.space,
+                            show_ingredients_table=False
+                        ))
+                except Exception:   
+                    pass
+                if not ingredients_added:
+                    ingredient_parser = IngredientParser(self.request, True)
+                    for ingredient in recipe_json['ingredients']:
+                        try:                     
+                            if 'ingredient' in ingredient:
+                                if 'name' in ingredient['ingredient']:
+                                    food = ingredient['ingredient']['name']
+                                    original_text = ingredient['ingredient']['name']
+                                    # print("food:", re.search('\\(', food))
+                                    note = None
+                                    if re.search(r'\(', food) != None:
+                                        note = re.search(r'\((.*?)\)',food).group(1)
+                                        food = re.sub(r'\(.*\)', '', food)
+                            if 'quantity' in ingredient:
+                                if 'amount' in ingredient['quantity']:
+                                    amount = ingredient['quantity']['amount']
+                                if 'quantityType' in ingredient['quantity']:
+                                    unit = ingredient['quantity']['quantityType'].lower()
+                                    unit = pattern.sub(lambda x: replacement_map[x.group()], unit)
+                                    is_header = False
+                                if ingredient['quantity']['quantityType'] == 'ITEM':
+                                    unit = None
+                                if ingredient['quantity']['quantityType'] == 'SECTION':
+                                    is_header = True
+                                    amount = 0
+                                    unit = None
+                                    note = food
+                            f = ingredient_parser.get_food(food)
+                            u = ingredient_parser.get_unit(unit)
+                            step.ingredients.add(Ingredient.objects.create(
+                                food=f, unit=u, amount=amount, is_header=is_header, note=note, original_text=original_text, space=self.request.space,
+                            ))
+                        except Exception:
+                            pass
+                    recipe.steps.add(step)
+                    ingredients_added = True
+                else:
+                    recipe.steps.add(step)
+        
+        if 'notes' in recipe_json:
+            try:
+                notes = recipe_json['notes']
+                recipe.steps.add(Step.objects.create(
+                    name='Notes',
+                    instruction=notes,
+                    order=recipe.steps.count() + 1,
+                    space=self.request.space
+                ))
+            except Exception:
+                pass
+
         if 'nutritionalInfo' in recipe_json or 'neutritionalInfo' in recipe_json:
             nutrition = {}
             try:

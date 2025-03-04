@@ -22,4 +22,6 @@ export const INTEGRATIONS = [
     {id: 'REZKONV', name: "Rezkonv", import: true, export: false, help_url: 'https://docs.tandoor.dev/features/import_export/#rezkonv'},
     {id: 'SAFRON', name: "Safron", import: true, export: true, help_url: 'https://docs.tandoor.dev/features/import_export/#safron'},
     {id: 'REZEPTSUITEDE', name: "Rezeptsuite.de", import: true, export: false, help_url: 'https://docs.tandoor.dev/features/import_export/#rezeptsuitede'},
-]
+    {id: 'CROUTON', name: "Crouton", import: true, export: false, help_url: 'https://docs.tandoor.dev/features/import_export/#rezeptsuitede'},
+
+  ]
