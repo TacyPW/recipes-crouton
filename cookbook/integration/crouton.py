@@ -36,7 +36,7 @@ class Crouton(Integration):
         # FIXME: add ingredients         
         if 'ingredients' in recipe_json:
             step = Step.objects.create(
-                    instruction="s", space=self.request.space, show_ingredients_table=self.request.user.userpreference.show_step_ingredients,
+                    instruction="s", space=self.request.space, show_ingredients_table=False,
                 )
             ingredient_parser = IngredientParser(self.request, True)
             for ingredient in recipe_json['ingredients']:
