@@ -35,8 +35,8 @@ class Crouton(Integration):
         # if 'tags' in recipe_json:
         #     recipe.keywords.set(Keyword.objects.filter(name__in=recipe_json['tags']))
         step = Step.objects.create(
-                instruction="s", space=self.request.space,
-            )        
+            space=self.request.space,
+        )        
                 
         ingredients_added = False
 
@@ -81,7 +81,8 @@ class Crouton(Integration):
                                 if 'quantityType' in ingredient['quantity']:
                                     unit = ingredient['quantity']['quantityType']
                                     is_header = False
-                                    
+                                if ingredient['quantity']['quantityType'] == 'ITEM':
+                                    unit = None
                                 if ingredient['quantity']['quantityType'] == 'SECTION':
                                     is_header = True
                                     amount = 0
