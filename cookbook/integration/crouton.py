@@ -65,7 +65,7 @@ class Crouton(Integration):
                     # food = ingredient_parser.parse_food(ingredient.ingredient.name)
                     f = ingredient_parser.get_food(food)
                     u = ingredient_parser.get_unit(unit)
-                    print(f'Amount: {amount}, Unit: {u}, Food: {f}')
+                    # print(f'Amount: {amount}, Unit: {u}, Food: {f}')
                     step.ingredients.add(Ingredient.objects.create(
                         food=f, unit=u, amount=amount, is_header=is_header, original_text=ingredient, space=self.request.space,
                     ))
@@ -75,10 +75,26 @@ class Crouton(Integration):
 
         # FIXME: add "steps" as recipe directions
         if 'steps' in recipe_json:
-            step = Step.objects.create(space=self.request.space)
             for direction in recipe_json['steps']:
-                step.instruction = direction 
-            recipe.steps.add(step)
+                try:
+                    if 'step' in direction:
+                        instruction = direction['step']
+                        print(f'Step: {step.instruction}')
+                    if 'order' in direction:
+                        order = direction['order']
+                        recipe.steps.add(Step.objects.create(
+                            instruction=instruction,
+                            order=order,
+                            space=self.request.space
+                        ))
+                    else: 
+                        recipe.steps.add(Step.objects.create(
+                            instruction=instruction, 
+                            space=self.request.space
+                        ))
+                except Exception:   
+                    pass
+                
 
         # FIXME: add nutritional info - also accept the misspelling "neutritionalInfo"
         if 'nutritionalInfo' in recipe_json or 'neutritionalInfo' in recipe_json:
