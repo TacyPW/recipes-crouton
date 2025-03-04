@@ -94,7 +94,20 @@ class Crouton(Integration):
                         ))
                 except Exception:   
                     pass
-                
+        
+        # FIXME: add "notes" as recipe notes
+        if 'notes' in recipe_json:
+            try:
+                notes = recipe_json['notes']
+                recipe.steps.add(Step.objects.create(
+                    name='Notes',
+                    instruction=notes,
+                    order=recipe.steps.count() + 1,
+                    space=self.request.space
+                ))
+            except Exception:
+                pass
+
 
         # FIXME: add nutritional info - also accept the misspelling "neutritionalInfo"
         if 'nutritionalInfo' in recipe_json or 'neutritionalInfo' in recipe_json:
