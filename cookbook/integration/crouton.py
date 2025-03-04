@@ -34,6 +34,7 @@ class Crouton(Integration):
         # FIXME: add category and tags as keywords
         # if 'tags' in recipe_json:
         #     recipe.keywords.set(Keyword.objects.filter(name__in=recipe_json['tags']))
+
         step = Step.objects.create(
             space=self.request.space,
         )        
@@ -72,7 +73,7 @@ class Crouton(Integration):
                                     original_text = ingredient['ingredient']['name']
                                     # print("food:", re.search('\\(', food))
                                     note = None
-                                    if re.search('\\(', food) != None:
+                                    if re.search(r'\(', food) != None:
                                         note = re.search(r'\((.*?)\)',food).group(1)
                                         food = re.sub(r'\(.*\)', '', food)
                             if 'quantity' in ingredient:
