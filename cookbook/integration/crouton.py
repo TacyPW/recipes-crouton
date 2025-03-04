@@ -31,9 +31,12 @@ class Crouton(Integration):
         if 'webLink' in recipe_json:
             recipe.source_url = recipe_json['webLink']
 
-        # FIXME: add category and tags as keywords
-        # if 'tags' in recipe_json:
-        #     recipe.keywords.set(Keyword.objects.filter(name__in=recipe_json['tags']))
+        if 'tags' in recipe_json:
+            try:
+                for tag in recipe_json['tags']:
+                    recipe.keywords.add(Keyword.objects.get_or_create(space=self.request.space, name=tag)[0])
+            except Exception:
+                pass
 
         step = Step.objects.create(
             space=self.request.space,
