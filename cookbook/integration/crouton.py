@@ -82,6 +82,7 @@ class Crouton(Integration):
         ]
         pattern = re.compile(r'\b(' + '|'.join([re.escape(word) for word, _ in replacements]) + r')\b')
         replacement_map = dict(replacements)
+
         ingredients_added = False
 
         if 'steps' in recipe_json:
@@ -145,7 +146,6 @@ class Crouton(Integration):
                 else:
                     recipe.steps.add(step)
         
-        # FIXME: add "notes" as recipe notes
         if 'notes' in recipe_json:
             try:
                 notes = recipe_json['notes']
@@ -158,8 +158,6 @@ class Crouton(Integration):
             except Exception:
                 pass
 
-
-        # FIXME: add nutritional info - also accept the misspelling "neutritionalInfo"
         if 'nutritionalInfo' in recipe_json or 'neutritionalInfo' in recipe_json:
             nutrition = {}
             try:
