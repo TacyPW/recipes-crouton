@@ -52,7 +52,7 @@ class Crouton(Integration):
                             is_header = False
                         if ingredient['quantity']['quantityType'] == 'SECTION':
                             is_header = True
-                            amount = None
+                            amount = 0
                             unit = None
                     #amount, unit, food, note = ingredient_parser.parse(ingredient)
                     # amount = ingredient.get('quantity', dict).get('amount', None)
