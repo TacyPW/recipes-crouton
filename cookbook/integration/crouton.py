@@ -42,17 +42,28 @@ class Crouton(Integration):
             ingredient_parser = IngredientParser(self.request, True)
             for ingredient in recipe_json['ingredients']:
                 # print(ingredient.get('ingredient', dict).get('name', None))
-                food = ingredient.get('ingredient', dict).get('name', None);
-                #amount, unit, food, note = ingredient_parser.parse(ingredient)
-                if ingredient.get('quantity', dict).get('quantityType', None) == 'SECTION':
-                    amount = None
-                    unit = None
-                    is_header = True
-                else:
-                    amount = ingredient.get('quantity', dict).get('amount', None)
-                    unit = ingredient.get('quantity', dict).get('quantityType', None)
+                
+                if 'ingredient' in ingredient:
+                    # amount = ingredient['quantity']['amount']
+                    # unit = ingredient['quantity']['quantityType']
+                    food = ingredient['ingredient']['name']
                     is_header = False
-                print(f'Amount: {amount}, Unit: {unit}, Food: {food}, Header: {is_header}')
+
+                if 'quantity' in ingredient:
+                    if 'amount' in ingredient['quantity']:
+                        amount = ingredient['quantity']['amount']
+                    if 'quantityType' in ingredient['quantity']:
+                        unit = ingredient['quantity']['quantityType']
+                    if ingredient['quantity']['quantityType'] == 'SECTION':
+                        is_header = True
+                        amount = None
+                        unit = None
+                    # food = ingredient.get('ingredient', dict).get('name', None);
+                #amount, unit, food, note = ingredient_parser.parse(ingredient)
+                # amount = ingredient.get('quantity', dict).get('amount', None)
+                # unit = ingredient.get('quantity', dict).get('quantityType', None)
+                # is_header = False
+                # print(f'Amount: {amount}, Unit: {unit}, Food: {food}, Header: {is_header}')
                 # amount = ingredient_parser.parse_amount(ingredient.quantity.amount)
                 # unit = ingredient_parser.parse_unit(ingredient.quantity.quantityType) 
                 # # FIXME: add note from ingredient.ingredient.name: parse between parentheses
