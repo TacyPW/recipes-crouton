@@ -34,34 +34,9 @@ class Crouton(Integration):
         # if 'tags' in recipe_json:
         #     recipe.keywords.set(Keyword.objects.filter(name__in=recipe_json['tags']))
         # FIXME: add ingredients         
-        if 'ingredients' in recipe_json:
-            step = Step.objects.create(
-                    instruction="s", space=self.request.space, show_ingredients_table=False,
-                )
-            ingredient_parser = IngredientParser(self.request, True)
-            for ingredient in recipe_json['ingredients']:
-                try:                     
-                    if 'ingredient' in ingredient:
-                        if 'name' in ingredient['ingredient']:
-                            food = ingredient['ingredient']['name']
-                    if 'quantity' in ingredient:
-                        if 'amount' in ingredient['quantity']:
-                            amount = ingredient['quantity']['amount']
-                        if 'quantityType' in ingredient['quantity']:
-                            unit = ingredient['quantity']['quantityType']
-                            is_header = False
-                        if ingredient['quantity']['quantityType'] == 'SECTION':
-                            is_header = True
-                            amount = 0
-                            unit = None
-                    f = ingredient_parser.get_food(food)
-                    u = ingredient_parser.get_unit(unit)
-                    step.ingredients.add(Ingredient.objects.create(
-                        food=f, unit=u, amount=amount, is_header=is_header, original_text=ingredient, space=self.request.space,
-                    ))
-                except Exception:
-                    pass
-                recipe.steps.add(step)
+        step = Step.objects.create(
+                instruction="s", space=self.request.space,
+            )        
                 
         ingredients_added = False
 
@@ -77,18 +52,48 @@ class Crouton(Integration):
                         step = (Step.objects.create(
                             instruction=instruction,
                             order=order,
-                            space=self.request.space
+                            space=self.request.space,
+                            show_ingredients_table=False
                         ))
                     else: 
                         step = (Step.objects.create(
                             instruction=instruction, 
-                            space=self.request.space
+                            space=self.request.space,
+                            show_ingredients_table=False
                         ))
-
-                        
-                    recipe.steps.add(step)
                 except Exception:   
                     pass
+                if not ingredients_added:
+                    ingredient_parser = IngredientParser(self.request, True)
+                    for ingredient in recipe_json['ingredients']:
+                        try:                     
+                            if 'ingredient' in ingredient:
+                                if 'name' in ingredient['ingredient']:
+                                    food = ingredient['ingredient']['name']
+                                    original_text = ingredient['ingredient']['name']
+                            if 'quantity' in ingredient:
+                                if 'amount' in ingredient['quantity']:
+                                    amount = ingredient['quantity']['amount']
+                                if 'quantityType' in ingredient['quantity']:
+                                    unit = ingredient['quantity']['quantityType']
+                                    is_header = False
+                                    note = None
+                                if ingredient['quantity']['quantityType'] == 'SECTION':
+                                    is_header = True
+                                    amount = 0
+                                    unit = None
+                                    note = food
+                            f = ingredient_parser.get_food(food)
+                            u = ingredient_parser.get_unit(unit)
+                            step.ingredients.add(Ingredient.objects.create(
+                                food=f, unit=u, amount=amount, is_header=is_header, no_amount=is_header, note=note, original_text=original_text, space=self.request.space,
+                            ))
+                        except Exception:
+                            pass
+                    recipe.steps.add(step)
+                    ingredients_added = True
+                else:
+                    recipe.steps.add(step)
         
         # FIXME: add "notes" as recipe notes
         if 'notes' in recipe_json:
