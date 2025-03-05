@@ -18,7 +18,12 @@ class Crouton(Integration):
     def get_recipe_from_file(self, file):
         recipe_json = json.loads(file.getvalue().decode("utf-8"))
 
-        recipe = Recipe.objects.create(name=recipe_json['name'].strip(), created_by=self.request.user, internal=True, space=self.request.space)
+        recipe = Recipe.objects.create(
+            name=recipe_json['name'].strip(),
+            created_by=self.request.user,
+            internal=True,
+            space=self.request.space,
+        )
 
         if 'serves' in recipe_json:
             recipe.servings = parse_servings(recipe_json['serves'])
