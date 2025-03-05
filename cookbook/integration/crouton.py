@@ -91,7 +91,6 @@ class Crouton(Integration):
                 try:
                     if 'step' in direction:
                         instruction = direction['step']
-                        # print(f'Step: {step.instruction}')
                     if 'order' in direction:
                         order = direction['order']
                         step = (Step.objects.create(instruction=instruction, order=order, space=self.request.space, show_ingredients_table=False))
