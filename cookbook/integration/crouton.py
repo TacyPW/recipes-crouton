@@ -1,11 +1,11 @@
-import json
-from io import BytesIO
-import re
 # from zipfile import ZipFile
 import base64
+import json
+import re
+from io import BytesIO
 
 from cookbook.helper.ingredient_parser import IngredientParser
-from cookbook.helper.recipe_url_import import parse_time, parse_servings
+from cookbook.helper.recipe_url_import import parse_servings, parse_time
 from cookbook.integration.integration import Integration
 from cookbook.models import Ingredient, Keyword, NutritionInformation, Recipe, Step
 
