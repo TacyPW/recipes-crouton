@@ -1,27 +1,25 @@
 import json
 from io import BytesIO
 import re
-from zipfile import ZipFile
+# from zipfile import ZipFile
 import base64
 
-from cookbook.helper.image_processing import get_filetype
 from cookbook.helper.ingredient_parser import IngredientParser
-from cookbook.helper.recipe_url_import import parse_duration, parse_time, parse_servings
+from cookbook.helper.recipe_url_import import parse_time, parse_servings
 from cookbook.integration.integration import Integration
 from cookbook.models import Ingredient, Keyword, NutritionInformation, Recipe, Step
+
 
 class Crouton(Integration):
 
     def import_file_name_filter(self, zip_info_object):
         return zip_info_object.filename.endswith('.crumb')
-    
+
     def get_recipe_from_file(self, file):
         recipe_json = json.loads(file.getvalue().decode("utf-8"))
 
-        recipe = Recipe.objects.create(
-            name=recipe_json['name'].strip(),
-            created_by=self.request.user, internal=True, space=self.request.space)
-        
+        recipe = Recipe.objects.create(name=recipe_json['name'].strip(), created_by=self.request.user, internal=True, space=self.request.space)
+
         if 'serves' in recipe_json:
             recipe.servings = parse_servings(recipe_json['serves'])
         if 'duration' in recipe_json:
@@ -38,10 +36,8 @@ class Crouton(Integration):
             except Exception:
                 pass
 
-        step = Step.objects.create(
-            space=self.request.space,
-        )        
-        
+        step = Step.objects.create(space=self.request.space, )
+
         replacements = [
             ['tablespoon', 'tbsp'],
             ['tablespoons', 'tbsp'],
@@ -86,39 +82,30 @@ class Crouton(Integration):
         ingredients_added = False
 
         if 'steps' in recipe_json:
-            for direction in recipe_json['steps']:               
+            for direction in recipe_json['steps']:
                 try:
                     if 'step' in direction:
                         instruction = direction['step']
                         # print(f'Step: {step.instruction}')
                     if 'order' in direction:
                         order = direction['order']
-                        step = (Step.objects.create(
-                            instruction=instruction,
-                            order=order,
-                            space=self.request.space,
-                            show_ingredients_table=False
-                        ))
-                    else: 
-                        step = (Step.objects.create(
-                            instruction=instruction, 
-                            space=self.request.space,
-                            show_ingredients_table=False
-                        ))
-                except Exception:   
+                        step = (Step.objects.create(instruction=instruction, order=order, space=self.request.space, show_ingredients_table=False))
+                    else:
+                        step = (Step.objects.create(instruction=instruction, space=self.request.space, show_ingredients_table=False))
+                except Exception:
                     pass
                 if not ingredients_added:
                     ingredient_parser = IngredientParser(self.request, True)
                     for ingredient in recipe_json['ingredients']:
-                        try:                     
+                        try:
                             if 'ingredient' in ingredient:
                                 if 'name' in ingredient['ingredient']:
                                     food = ingredient['ingredient']['name']
                                     original_text = ingredient['ingredient']['name']
                                     # print("food:", re.search('\\(', food))
                                     note = None
-                                    if re.search(r'\(', food) != None:
-                                        note = re.search(r'\((.*?)\)',food).group(1)
+                                    if re.search(r'\(', food) is not None:
+                                        note = re.search(r'\((.*?)\)', food).group(1)
                                         food = re.sub(r'\(.*\)', '', food)
                             if 'quantity' in ingredient:
                                 if 'amount' in ingredient['quantity']:
@@ -136,25 +123,28 @@ class Crouton(Integration):
                                     note = food
                             f = ingredient_parser.get_food(food)
                             u = ingredient_parser.get_unit(unit)
-                            step.ingredients.add(Ingredient.objects.create(
-                                food=f, unit=u, amount=amount, is_header=is_header, note=note, original_text=original_text, space=self.request.space,
-                            ))
+                            step.ingredients.add(
+                                Ingredient.objects.create(
+                                    food=f,
+                                    unit=u,
+                                    amount=amount,
+                                    is_header=is_header,
+                                    note=note,
+                                    original_text=original_text,
+                                    space=self.request.space,
+                                )
+                            )
                         except Exception:
                             pass
                     recipe.steps.add(step)
                     ingredients_added = True
                 else:
                     recipe.steps.add(step)
-        
+
         if 'notes' in recipe_json:
             try:
                 notes = recipe_json['notes']
-                recipe.steps.add(Step.objects.create(
-                    name='Notes',
-                    instruction=notes,
-                    order=recipe.steps.count() + 1,
-                    space=self.request.space
-                ))
+                recipe.steps.add(Step.objects.create(name='Notes', instruction=notes, order=recipe.steps.count() + 1, space=self.request.space))
             except Exception:
                 pass
 
