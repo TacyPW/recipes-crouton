@@ -91,11 +91,17 @@ class Crouton(Integration):
                 try:
                     if 'step' in direction:
                         instruction = direction['step']
+                    if 'isSection' in direction:
+                        if direction['isSection']:
+                            instruction = ''
+                            name = direction['step']
+                        else:
+                            name = ''
                     if 'order' in direction:
                         order = direction['order']
-                        step = (Step.objects.create(instruction=instruction, order=order, space=self.request.space, show_ingredients_table=False))
+                        step = (Step.objects.create(instruction=instruction, name=name, order=order, space=self.request.space, show_ingredients_table=False))
                     else:
-                        step = (Step.objects.create(instruction=instruction, space=self.request.space, show_ingredients_table=False))
+                        step = (Step.objects.create(instruction=instruction, name=name, space=self.request.space, show_ingredients_table=False))
                 except Exception:
                     pass
                 if not ingredients_added:
