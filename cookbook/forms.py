@@ -88,7 +88,6 @@ class ImportExportBase(forms.Form):
     COPYMETHAT = 'COPYMETHAT'
     COOKMATE = 'COOKMATE'
     REZEPTSUITEDE = 'REZEPTSUITEDE'
-    CROUTON = 'CROUTON'
     PDF = 'PDF'
     GOURMET = 'GOURMET'
 
@@ -96,7 +95,7 @@ class ImportExportBase(forms.Form):
                                       (SAFFRON, 'Saffron'), (CHEFTAP, 'ChefTap'), (PEPPERPLATE, 'Pepperplate'), (RECETTETEK, 'RecetteTek'), (RECIPESAGE, 'Recipe Sage'),
                                       (DOMESTICA, 'Domestica'), (MEALMASTER, 'MealMaster'), (REZKONV, 'RezKonv'), (OPENEATS, 'Openeats'), (RECIPEKEEPER, 'Recipe Keeper'),
                                       (PLANTOEAT, 'Plantoeat'), (COOKBOOKAPP, 'CookBookApp'), (COPYMETHAT, 'CopyMeThat'), (PDF, 'PDF'), (MELARECIPES, 'Melarecipes'),
-                                      (COOKMATE, 'Cookmate'), (REZEPTSUITEDE, 'Recipesuite.de'), (GOURMET, 'Gourmet'), (CROUTON, 'Crouton')))
+                                      (COOKMATE, 'Cookmate'), (REZEPTSUITEDE, 'Recipesuite.de'), (GOURMET, 'Gourmet')))
 
 
 class MultipleFileInput(forms.ClearableFileInput):
