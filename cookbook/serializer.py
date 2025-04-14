@@ -22,6 +22,7 @@ from rest_framework.fields import IntegerField
 
 from cookbook.helper.CustomStorageClass import CachedS3Boto3Storage
 from cookbook.helper.HelperFunctions import str2bool
+from cookbook.helper.image_processing import is_file_type_allowed
 from cookbook.helper.permission_helper import above_space_limit
 from cookbook.helper.property_helper import FoodPropertyHelper
 from cookbook.helper.shopping_helper import RecipeShoppingEditor
@@ -233,12 +234,17 @@ class UserFileSerializer(serializers.ModelSerializer):
                 raise ValidationError(_('You have reached your file upload limit.'))
 
     def create(self, validated_data):
+        if not is_file_type_allowed(validated_data['file'].name):
+            return None
+
         self.check_file_limit(validated_data)
         validated_data['created_by'] = self.context['request'].user
         validated_data['space'] = self.context['request'].space
         return super().create(validated_data)
 
     def update(self, instance, validated_data):
+        if not is_file_type_allowed(validated_data['file'].name):
+            return None
         self.check_file_limit(validated_data)
         return super().update(instance, validated_data)
 
@@ -427,7 +433,7 @@ class ConnectorConfigConfigSerializer(SpacedModelSerializer):
         fields = (
             'id', 'name', 'url', 'token', 'todo_entity', 'enabled',
             'on_shopping_list_entry_created_enabled', 'on_shopping_list_entry_updated_enabled',
-            'on_shopping_list_entry_deleted_enabled', 'created_by'
+            'on_shopping_list_entry_deleted_enabled', 'supports_description_field', 'created_by'
         )
 
         read_only_fields = ('created_by',)
@@ -958,6 +964,16 @@ class RecipeImageSerializer(WritableNestedModelSerializer):
     image = serializers.ImageField(required=False, allow_null=True)
     image_url = serializers.CharField(max_length=4096, required=False, allow_null=True)
 
+    def create(self, validated_data):
+        if 'image' in validated_data and not is_file_type_allowed(validated_data['image'].name, image_only=True):
+            return None
+        return super().create( validated_data)
+
+    def update(self, instance, validated_data):
+        if 'image' in validated_data and not is_file_type_allowed(validated_data['image'].name, image_only=True):
+            return None
+        return super().update(instance, validated_data)
+
     class Meta:
         model = Recipe
         fields = ['image', 'image_url', ]
@@ -1077,6 +1093,7 @@ class ShoppingListRecipeSerializer(serializers.ModelSerializer):
     mealplan_from_date = serializers.ReadOnlyField(source='mealplan.from_date')
     mealplan_type = serializers.ReadOnlyField(source='mealplan.meal_type.name')
     servings = CustomDecimalField()
+    created_by = UserSerializer(read_only=True)
 
     def get_name(self, obj):
         if not isinstance(value := obj.servings, Decimal):
@@ -1090,6 +1107,11 @@ class ShoppingListRecipeSerializer(serializers.ModelSerializer):
                 or obj.recipe.name
         ) + f' ({value:.2g})'
 
+    def create(self, validated_data):
+        validated_data['space'] = self.context['request'].space
+        validated_data['created_by'] = self.context['request'].user
+        return super().create(validated_data)
+
     def update(self, instance, validated_data):
         # TODO remove once old shopping list
         if 'servings' in validated_data and self.context.get('view', None).__class__.__name__ != 'ShoppingListViewSet':
@@ -1100,8 +1122,8 @@ class ShoppingListRecipeSerializer(serializers.ModelSerializer):
     class Meta:
         model = ShoppingListRecipe
         fields = ('id', 'recipe_name', 'name', 'recipe', 'mealplan', 'servings', 'mealplan_note', 'mealplan_from_date',
-                  'mealplan_type')
-        read_only_fields = ('id',)
+                  'mealplan_type', 'created_by')
+        read_only_fields = ('id',  'created_by',)
 
 
 class ShoppingListEntrySerializer(WritableNestedModelSerializer):

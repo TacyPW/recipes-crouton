@@ -1,6 +1,8 @@
 from datetime import datetime
 
+
 from allauth.account.forms import ResetPasswordForm, SignupForm
+from allauth.socialaccount.forms import SignupForm as SocialSignupForm
 from django import forms
 from django.conf import settings
 from django.core.exceptions import ValidationError
@@ -14,15 +16,13 @@ from .models import Comment, InviteLink, Keyword, Recipe, SearchPreference, Spac
 
 
 class SelectWidget(widgets.Select):
-
     class Media:
-        js = ('custom/js/form_select.js', )
+        js = ('custom/js/form_select.js',)
 
 
 class MultiSelectWidget(widgets.SelectMultiple):
-
     class Media:
-        js = ('custom/js/form_multiselect.js', )
+        js = ('custom/js/form_multiselect.js',)
 
 
 # Yes there are some stupid browsers that still dont support this but
@@ -90,12 +90,13 @@ class ImportExportBase(forms.Form):
     REZEPTSUITEDE = 'REZEPTSUITEDE'
     CROUTON = 'CROUTON'
     PDF = 'PDF'
+    GOURMET = 'GOURMET'
 
     type = forms.ChoiceField(choices=((DEFAULT, _('Default')), (PAPRIKA, 'Paprika'), (NEXTCLOUD, 'Nextcloud Cookbook'), (MEALIE, 'Mealie'), (CHOWDOWN, 'Chowdown'),
                                       (SAFFRON, 'Saffron'), (CHEFTAP, 'ChefTap'), (PEPPERPLATE, 'Pepperplate'), (RECETTETEK, 'RecetteTek'), (RECIPESAGE, 'Recipe Sage'),
                                       (DOMESTICA, 'Domestica'), (MEALMASTER, 'MealMaster'), (REZKONV, 'RezKonv'), (OPENEATS, 'Openeats'), (RECIPEKEEPER, 'Recipe Keeper'),
                                       (PLANTOEAT, 'Plantoeat'), (COOKBOOKAPP, 'CookBookApp'), (COPYMETHAT, 'CopyMeThat'), (PDF, 'PDF'), (MELARECIPES, 'Melarecipes'),
-                                      (COOKMATE, 'Cookmate'), (REZEPTSUITEDE, 'Recipesuite.de'), (CROUTON, 'Crouton')))
+                                      (COOKMATE, 'Cookmate'), (REZEPTSUITEDE, 'Recipesuite.de'), (GOURMET, 'Gourmet'), (CROUTON, 'Crouton')))
 
 
 class MultipleFileInput(forms.ClearableFileInput):
@@ -139,7 +140,7 @@ class CommentForm(forms.ModelForm):
 
     class Meta:
         model = Comment
-        fields = ('text', )
+        fields = ('text',)
 
         labels = {'text': _('Add your comment: '), }
         widgets = {'text': forms.Textarea(attrs={'rows': 2, 'cols': 15}), }
@@ -159,7 +160,6 @@ class StorageForm(forms.ModelForm):
         fields = ('name', 'method', 'username', 'password', 'token', 'url', 'path')
 
         help_texts = {'url': _('Leave empty for dropbox and enter only base url for nextcloud (<code>/remote.php/webdav/</code> is added automatically)'), }
-
 
 
 class ConnectorConfigForm(forms.ModelForm):
@@ -183,6 +183,12 @@ class ConnectorConfigForm(forms.ModelForm):
         required=False,
     )
 
+    supports_description_field = forms.BooleanField(
+        help_text="Does the connector todo entity support the description field",
+        initial=True,
+        required=False,
+    )
+
     update_token = forms.CharField(
         widget=forms.TextInput(attrs={'autocomplete': 'update-token', 'type': 'password'}),
         required=False,
@@ -199,7 +205,7 @@ class ConnectorConfigForm(forms.ModelForm):
 
         fields = (
             'name', 'type', 'enabled', 'on_shopping_list_entry_created_enabled', 'on_shopping_list_entry_updated_enabled',
-            'on_shopping_list_entry_deleted_enabled', 'url', 'todo_entity',
+            'on_shopping_list_entry_deleted_enabled', 'supports_description_field', 'url', 'todo_entity',
         )
 
         help_texts = {
@@ -309,6 +315,18 @@ class AllAuthSignupForm(SignupForm):
         pass
 
 
+class AllAuthSocialSignupForm(SocialSignupForm):
+    terms = forms.BooleanField(label=_('Accept Terms and Privacy'))
+
+    def __init__(self, **kwargs):
+        super().__init__(**kwargs)
+        if settings.PRIVACY_URL == '' and settings.TERMS_URL == '':
+            self.fields.pop('terms')
+
+    def signup(self, request, user):
+        pass
+
+
 class CustomPasswordResetForm(ResetPasswordForm):
     captcha = hCaptchaField()
 
@@ -339,12 +357,13 @@ class SearchPreferenceForm(forms.ModelForm):
 
         help_texts = {
             'search': _('Select type method of search.  Click <a href="/docs/search/">here</a> for full description of choices.'), 'lookup':
-            _('Use fuzzy matching on units, keywords and ingredients when editing and importing recipes.'), 'unaccent':
-            _('Fields to search ignoring accents.  Selecting this option can improve or degrade search quality depending on language'), 'icontains':
-            _("Fields to search for partial matches.  (e.g. searching for 'Pie' will return 'pie' and 'piece' and 'soapie')"), 'istartswith':
-            _("Fields to search for beginning of word matches. (e.g. searching for 'sa' will return 'salad' and 'sandwich')"), 'trigram':
-            _("Fields to 'fuzzy' search. (e.g. searching for 'recpie' will find 'recipe'.)  Note: this option will conflict with 'web' and 'raw' methods of search."), 'fulltext':
-            _("Fields to full text search.  Note: 'web', 'phrase', and 'raw' search methods only function with fulltext fields."),
+                _('Use fuzzy matching on units, keywords and ingredients when editing and importing recipes.'), 'unaccent':
+                _('Fields to search ignoring accents.  Selecting this option can improve or degrade search quality depending on language'), 'icontains':
+                _("Fields to search for partial matches.  (e.g. searching for 'Pie' will return 'pie' and 'piece' and 'soapie')"), 'istartswith':
+                _("Fields to search for beginning of word matches. (e.g. searching for 'sa' will return 'salad' and 'sandwich')"), 'trigram':
+                _("Fields to 'fuzzy' search. (e.g. searching for 'recpie' will find 'recipe'.)  Note: this option will conflict with 'web' and 'raw' methods of search."),
+            'fulltext':
+                _("Fields to full text search.  Note: 'web', 'phrase', and 'raw' search methods only function with fulltext fields."),
         }
 
         labels = {
@@ -354,5 +373,5 @@ class SearchPreferenceForm(forms.ModelForm):
 
         widgets = {
             'search': SelectWidget, 'unaccent': MultiSelectWidget, 'icontains': MultiSelectWidget, 'istartswith': MultiSelectWidget, 'trigram': MultiSelectWidget, 'fulltext':
-            MultiSelectWidget,
+                MultiSelectWidget,
         }
