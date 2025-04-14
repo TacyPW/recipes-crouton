@@ -14,6 +14,7 @@ from cookbook.integration.chowdown import Chowdown
 from cookbook.integration.cookbookapp import CookBookApp
 from cookbook.integration.cookmate import Cookmate
 from cookbook.integration.copymethat import CopyMeThat
+from cookbook.integration.crouton import Crouton
 from cookbook.integration.default import Default
 from cookbook.integration.domestica import Domestica
 from cookbook.integration.mealie import Mealie
@@ -83,6 +84,9 @@ def get_integration(request, export_type):
         return Rezeptsuitede(request, export_type)
     if export_type == ImportExportBase.GOURMET:
         return Gourmet(request, export_type)
+    if export_type == ImportExportBase.CROUTON:
+        return Crouton(request, export_type)
+
 
 
 @group_required('user')

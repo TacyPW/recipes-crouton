@@ -23,4 +23,4 @@ export const INTEGRATIONS = [
     {id: 'SAFRON', name: "Safron", import: true, export: true, help_url: 'https://docs.tandoor.dev/features/import_export/#safron'},
     {id: 'REZEPTSUITEDE', name: "Rezeptsuite.de", import: true, export: false, help_url: 'https://docs.tandoor.dev/features/import_export/#rezeptsuitede'},
     {id: 'GOURMET', name: "Gourmet", import: true, export: false, help_url: 'https://docs.tandoor.dev/features/import_export/#gourmet'},
-]
+    {id: 'CROUTON', name: "Crouton", import: true, export: false, help_url: 'https://docs.tandoor.dev/features/import_export/#rezeptsuitede'},
