@@ -23,7 +23,7 @@ RUN \
     fi
 # remove Development dependencies from requirements.txt
 RUN sed -i '/# Development/,$d' requirements.txt
-RUN apk add --no-cache --virtual .build-deps gcc musl-dev postgresql-dev zlib-dev jpeg-dev libwebp-dev openssl-dev libffi-dev cargo openldap-dev python3-dev && \
+RUN apk add --no-cache --virtual .build-deps gcc musl-dev postgresql-dev zlib-dev jpeg-dev libwebp-dev openssl-dev libffi-dev cargo openldap-dev python3-dev xmlsec-dev xmlsec build-base  && \
     echo -n "INPUT ( libldap.so )" > /usr/lib/libldap_r.so && \
     python -m venv venv && \
     /opt/recipes/venv/bin/python -m pip install --upgrade pip && \
@@ -34,6 +34,13 @@ RUN apk add --no-cache --virtual .build-deps gcc musl-dev postgresql-dev zlib-de
 
 #Copy project and execute it.
 COPY . ./
+
+# commented for now https://github.com/TandoorRecipes/recipes/issues/3478
+#HEALTHCHECK --interval=30s \
+#            --timeout=5s \
+#            --start-period=10s \
+#            --retries=3 \
+#            CMD [ "/usr/bin/wget", "--no-verbose", "--tries=1", "--spider", "http://127.0.0.1:8080/openapi" ]
 
 # collect information from git repositories
 RUN /opt/recipes/venv/bin/python version.py

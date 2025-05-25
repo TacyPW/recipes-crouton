@@ -12,9 +12,9 @@
 
     <h1>{% trans 'System' %}</h1>
     {% blocktrans %}
-        Django Recipes is an open source free software application. It can be found on
-        <a href="https://github.com/vabene1111/recipes">GitHub</a>.
-        Changelogs can be found <a href="https://github.com/vabene1111/recipes/releases">here</a>.
+        Tandoor Recipes is an open source free software application. It can be found on
+        <a href="https://github.com/TandoorRecipes/recipes">GitHub</a>.
+        Changelogs can be found <a href="https://github.com/TandoorRecipes/recipes/releases">here</a>.
     {% endblocktrans %}
 
     <h3 class="mt-5">{% trans 'System Information' %}</h3>
@@ -78,6 +78,17 @@
             This application is still running in debug mode. This is most likely not needed. Turn of debug mode by
             setting
             <code>DEBUG=0</code> int the <code>.env</code> configuration file.
+        {% endblocktrans %}
+    {% else %}
+        {% trans 'Everything is fine!' %}
+    {% endif %}
+
+    <h4 class="mt-3">{% trans 'Allowed Hosts' %} <span
+            class="badge badge-{% if '*' in allowed_hosts %}warning{% else %}success{% endif %}">{% if '*' in allowed_hosts %}
+        {% trans 'Warning' %}{% else %}{% trans 'Ok' %}{% endif %}</span></h4>
+    {% if debug %}
+        {% blocktrans %}
+            Your allowed hosts are configured to allow every host. This might be ok in some setups but should be avoided. Please see the docs about this.
         {% endblocktrans %}
     {% else %}
         {% trans 'Everything is fine!' %}
@@ -164,7 +175,34 @@
     {#{% for orphan in orphans %}{{ orphan }}#}
     {#{% endfor %}#}
     {#    </textarea>#}
+    {% if api_space_stats %}
+    <h4 class="mt-3">API Stats</h4>
+    <h6 >Space Stats</h6>
+    <table class="table table-bordered table-striped">
+        {% for r in api_space_stats %}
+            <tr>
+                {% for c in r %}
+                    <td>
+                        {{ c }}
+                    </td>
+                {% endfor %}
+            </tr>
+        {% endfor %}
+    </table>
 
+    <h6 >Endpoint Stats</h6>
+    <table class="table table-bordered table-striped">
+        {% for r in api_stats %}
+            <tr>
+                {% for c in r %}
+                    <td>
+                        {{ c }}
+                    </td>
+                {% endfor %}
+            </tr>
+        {% endfor %}
+    </table>
+    {% endif %}
     <h4 class="mt-3">Debug</h4>
     <textarea class="form-control" rows="20">
 Gunicorn Media: {{ gunicorn_media }}

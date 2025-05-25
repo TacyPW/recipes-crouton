@@ -6,7 +6,7 @@ from django.utils.dateparse import parse_duration
 from django.utils.translation import gettext as _
 from isodate import parse_duration as iso_parse_duration
 from isodate.isoerror import ISO8601Error
-from pytube import YouTube
+from pytubefix import YouTube
 from recipe_scrapers._utils import get_host_name, get_minutes
 
 from cookbook.helper.automation_helper import AutomationEngine
@@ -28,7 +28,9 @@ def get_from_scraper(scrape, request):
             source_url = scrape.url
         except Exception:
             pass
-    if source_url:
+    if source_url == "https://urlnotfound.none" or not source_url:
+        recipe_json['source_url'] = ''
+    else:
         recipe_json['source_url'] = source_url
         try:
             keywords.append(source_url.replace('http://', '').replace('https://', '').split('/')[0])
@@ -272,9 +274,8 @@ def get_from_youtube_scraper(url, request):
         default_recipe_json['image'] = video.thumbnail_url
         if video.description:
             default_recipe_json['steps'][0]['instruction'] = automation_engine.apply_regex_replace_automation(video.description, Automation.INSTRUCTION_REPLACE)
-
     except Exception:
-        pass
+        traceback.print_exc()
 
     return default_recipe_json
 
@@ -373,8 +374,8 @@ def parse_servings(servings):
             servings = 1
     elif isinstance(servings, list):
         try:
-            servings = int(re.findall(r'\b\d+\b', servings[0])[0])
-        except KeyError:
+            servings = int(re.findall(r'\b\d+\b', str(servings[0]))[0])
+        except (KeyError, IndexError):
             servings = 1
     return servings
 

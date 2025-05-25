@@ -27,6 +27,18 @@ SECRET_KEY_FILE=/path/to/file.txt
 #$tp%v6*(*ba01wcz(ip(i5vfz8z$f%qdio&q@anr1#$=%(m4c
 ```
 
+#### Allowed Hosts
+
+> default `*` - options: `recipes.mydomain.com,cooking.mydomain.com,...` (comma seperated domain/ip list)
+
+Security setting to prevent HTTP Host Header Attacks,
+see [Django docs](https://docs.djangoproject.com/en/5.0/ref/settings/#allowed-hosts).
+Some proxies require `*` (default) but it should be set to the actual host(s).
+
+```
+ALLOWED_HOSTS=recipes.mydomain.com
+```
+
 ### Database
 
 Multiple parameters are required to configure the database.
@@ -92,17 +104,6 @@ Port for gunicorn to bind to. Should not be changed if using docker stack with r
 TANDOOR_PORT=8080
 ```
 
-#### Allowed Hosts
-
-> default `*` - options: `recipes.mydomain.com,cooking.mydomain.com,...` (comma seperated domain/ip list)
-
-Security setting to prevent HTTP Host Header Attacks,
-see [Django docs](https://docs.djangoproject.com/en/5.0/ref/settings/#allowed-hosts).
-Many reverse proxies handle this and require the setting to be `*` (default).
-
-```
-ALLOWED_HOSTS=recipes.mydomain.com
-```
 
 #### URL Path
 
@@ -353,7 +354,7 @@ SOCIAL_PROVIDERS = allauth.socialaccount.providers.github, allauth.socialaccount
 Allow authentication via the REMOTE-USER header (can be used for e.g. authelia).
 
 !!! danger
-    Leave off if you don't know what you are doing! Enabling this without proper configuration will enable anybody 
+    Leave off if you don't know what you are doing! Enabling this without proper configuration will enable anybody
     to login with any username!
 
 ```
@@ -376,6 +377,14 @@ AUTH_LDAP_TLS_CACERTFILE=
 AUTH_LDAP_START_TLS=
 ```
 
+Instead of passing the LDAP password directly through the environment variable `AUTH_LDAP_BIND_PASSWORD`,
+you can set the password in a file and set the environment variable `AUTH_LDAP_BIND_PASSWORD_FILE`
+to the path of the file containing the ldap secret.
+
+```
+AUTH_LDAP_BIND_PASSWORD_FILE=/run/secrets/ldap_password.txt
+```
+
 ### External Services
 
 #### Email
@@ -393,6 +402,14 @@ EMAIL_USE_TLS=0
 EMAIL_USE_SSL=0
 # email sender address (default 'webmaster@localhost')
 DEFAULT_FROM_EMAIL=
+```
+
+Instead of passing the email password directly through the environment variable `EMAIL_HOST_PASSWORD`,
+you can set the password in a file and set the environment variable `EMAIL_HOST_PASSWORD_FILE`
+to the path of the file containing the ldap secret.
+
+```
+EMAIL_HOST_PASSWORD_FILE=/run/secrets/email_password.txt
 ```
 
 Optional settings (only copy the ones you need)
@@ -499,6 +516,18 @@ Set to `1` to enable additional query output on the search page.
 SQL_DEBUG=0
 ```
 
+#### Application Log Level
+
+> default `WARNING` - options: [see Django Docs](https://docs.djangoproject.com/en/5.0/topics/logging/#loggers)
+
+Increase or decrease the logging done by application.
+Please set to `DEBUG` when making a bug report.
+
+```
+ LOG_LEVEL="DEBUG"
+```
+
+
 #### Gunicorn Log Level
 
 > default `info` - options: [see Gunicorn Docs](https://docs.gunicorn.org/en/stable/settings.html#loglevel)
@@ -548,7 +577,7 @@ STICKY_NAV_PREF_DEFAULT=1
 
 > default `100` - options: `0-X`
 
-The default for the number of spaces a user can own. By setting to 0 space creation for users will be disabled. 
+The default for the number of spaces a user can own. By setting to 0 space creation for users will be disabled.
 Superusers can always bypass this limit.
 
 ```
@@ -573,7 +602,7 @@ TZ=Europe/Berlin
 #### Default Theme
 > default `0` - options `1-X` (space ID)
 
-Tandoors appearance can be changed on a user and space level but unauthenticated users always see the tandoor default style. 
+Tandoors appearance can be changed on a user and space level but unauthenticated users always see the tandoor default style.
 With this setting you can specify the ID of a space of which the appearance settings should be applied if a user is not logged in.
 
 ```
@@ -620,7 +649,7 @@ DRF_THROTTLE_RECIPE_URL_IMPORT=60/hour
 
 #### Default Space Limits
 You might want to limit how many resources a user might create. The following settings apply automatically to newly
-created spaces. These defaults can be changed in the admin view after a space has been created. 
+created spaces. These defaults can be changed in the admin view after a space has been created.
 
 If unset, all settings default to unlimited/enabled
 
